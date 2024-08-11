@@ -1,0 +1,70 @@
+#include <Servo.h>
+
+Servo servo;
+
+const int echoPin = 2;
+const int trigPin = 3;
+const int signalPin = 4;
+bool isOpen = false;
+const int btnPin = 5;
+bool btnState = LOW;
+int pressCount = 1;
+
+void setup(){
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(signalPin, INPUT);
+  pinMode(btnPin, OUTPUT);
+  servo.attach(signalPin);
+  servo.write(0);
+}
+
+void loop(){
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(trigPin, LOW);
+
+  float t = pulseIn(echoPin, HIGH);
+  float distance = t*0.017015;
+
+  if(distance >= 0 && distance <= 15 && !isOpen){
+    servo.write(180);
+    delay(5000);
+    servo.write(0);
+    isOpen = true;
+    delay(1000);
+  }
+  else if (distance > 6 && isOpen) {
+    servo.write(0);
+    isOpen = false;
+    delay(1000);
+  }
+
+  if(debounce(btnState) == HIGH && btnState == LOW){
+    pressCount++;
+    btnState = HIGH;
+  }
+  else if(debounce(btnState) == LOW && btnState == HIGH){
+    btnState = LOW;
+  }
+
+  if(pressCount % 2 == 0 && pressCount != 0){
+    servo.write(180);
+    delay(100);
+  }
+  else{
+    servo.write(0);
+    delay(100);
+  }
+}
+
+bool debounce(bool state){
+	bool stateNow = digitalRead(btnPin);
+  if(state != stateNow){
+  	delay(10);
+    stateNow = digitalRead(btnPin);
+  }
+  return stateNow;
+}
